@@ -110,7 +110,8 @@ class MacroFinder(object):
         new_tree = macropy.core.macros.ModuleExpansionContext(
             tree, source_code, modules).expand_macros()
         try:
-            return compile(tree, filename, "exec"), new_tree
+            _cmpld = compile(tree, filename, "exec")
+            return _cmpld, new_tree
         except Exception:
             logger.exception("Error while compiling file %s", filename)
             raise
