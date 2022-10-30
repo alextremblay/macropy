@@ -13,8 +13,7 @@ class Tests(unittest.TestCase):
 
     def test_basic(self):
 
-        with trace:
-            1 + 2
+        log[1 + 2]
         log["omg" * 3]
 
         assert(result[-2:] == [
