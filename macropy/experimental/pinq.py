@@ -30,7 +30,7 @@ def query(tree, gen_sym, **kw):
     # return q[(lambda query: query.bind.execute(query).fetchall())(ast[x])]
     new_tree = hq[(lambda query: name[sym].bind.execute(
         name[sym]).fetchall())(ast_literal[x])]
-    new_tree.func.args = ast.arguments([ast.arg(sym, None)], None, [], [],
+    new_tree.func.args = ast.arguments([], [ast.arg(sym, None)], None, [], [],
                                        None, [])
     return new_tree
 
