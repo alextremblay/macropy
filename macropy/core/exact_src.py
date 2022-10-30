@@ -49,7 +49,7 @@ def exact_src(tree, src, **kw):
 
     def exact_src_imp(tree, src, indexes, line_lengths):
         # Не совсем понимаю эту часть. Выглядит достаточно просто, однако контекст полностью ускользает.
-        print(all_child_pos, ast.dump(tree))
+        # print(all_child_pos, ast.dump(tree))
         all_child_pos = sorted(indexer.collect(tree))
         start_index = linear_index(line_lengths(), *all_child_pos[0])
 
