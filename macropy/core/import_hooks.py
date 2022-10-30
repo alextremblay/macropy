@@ -127,6 +127,7 @@ class MacroFinder(object):
                 logging.debug('Failed finding spec for %s', fullname)
             return
         origin = spec.origin
+        # NOTE: this is the skip? Nope, it isn't. But must be
         if origin == 'builtin':
             return
         # # try to find already exported module

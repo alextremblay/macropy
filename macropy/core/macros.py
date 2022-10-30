@@ -9,6 +9,7 @@ import importlib
 import inspect
 import logging
 
+
 from . import compat, real_repr, Captured, Literal
 
 
@@ -105,9 +106,12 @@ class Expr(MacroType):
     brackets, like ``amacro[foo]``."""
 
     def detect_macro(self, in_tree):
+        # FIXME: that type of macro can not be detected
+        AVOID = (ast.ExtSlice)
+
         if (isinstance(in_tree, ast.Subscript) and
-            type(in_tree.slice) is ast.Index):  # noqa: E129
-            body_tree = in_tree.slice.value
+            not isinstance(in_tree.slice, AVOID)):  # noqa: E129
+            body_tree = in_tree.slice
             name, macro_tree, call_args = self.get_macro_details(in_tree.value)
             if name is not None and name in self.registry:
                 new_tree = yield MacroData(self.registry[name], macro_tree,
@@ -243,7 +247,7 @@ class Macros:
                     raise ValueError("You should specify a name")
             return self.wrap(f)
 
-    """The types of macros that will be handled by the registry."""
+    # The types of macros that will be handled by the registry.
     macro_types = (Expr, Block, Decorator)
 
     def __init__(self):
@@ -361,9 +365,11 @@ class ExpansionContext:
         :param tree: an AST tree
         :returns: an AST tree or ``None``
         """
+        # FIXME: Problem somewhere here, it can't see a macro or can't change a tree
         new_tree = None
         found_macro = False
         # for every macro type
+
         for mtype in self.macro_types:
             new_tree = None
             # its ``detect_macro()`` is a coro, start a pull/send cycle
@@ -374,9 +380,10 @@ class ExpansionContext:
                 # StopIteration with a possible final ``.value`` member
                 while True:
                     mdata = type_it.send(new_tree)
-                    logger.debug("Found macro %r, type %r, line %d",
-                                 mdata.name, mtype.__class__.__name__,
-                                 mdata.macro_tree.lineno)
+                    print("Found macro {}, type {}, line {}".format(
+                        mdata.name, 
+                        mtype.__class__.__name__,
+                        mdata.macro_tree.lineno))
                     found_macro = True
                     mfunc, mmod = mdata.macro
                     # if the macro function is itself a coro, give  it
@@ -624,6 +631,6 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
 
 def check_annotated(tree):
     """Shorthand for checking if an AST is of the form something[...]."""
-    if (isinstance(tree, ast.Subscript) and type(tree.slice) is ast.Index and
+    if (isinstance(tree, ast.Subscript) and
         type(tree.value) is ast.Name):  # noqa: E129
-        return tree.value.id, tree.slice.value
+        return tree.value.id, tree.slice
