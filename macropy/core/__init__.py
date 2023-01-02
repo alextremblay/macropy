@@ -395,6 +395,11 @@ if compat.PY36:
                                             tree.ifs))
     })
 
+if compat.PY38:
+    trec.update({
+        ast.Constant: lambda tree, i: str(tree.value)
+    })
+
 if compat.HAS_FSTRING:
     trec.update({
         ast.FormattedValue: lambda tree, i: ("{" +  rec(tree.value, i) +
