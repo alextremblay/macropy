@@ -59,7 +59,8 @@ def peg(tree, gen_sym, **kw):
 def process(tree, potential_targets, gen_sym):  # noqa: F811
     @macropy.core.walkers.Walker
     def PegWalker(tree, stop, collect, **kw):
-        if type(tree) is ast.Str:
+        # FIXME: here is where parser fucked up. A lot of this stuff deprecated, so update it
+        if type(tree) is ast.Constant and type(tree.value) is str:
             stop()
             return hq[Parser.Raw(ast_literal[tree])]
         if type(tree) is ast.Name and tree.id in potential_targets:

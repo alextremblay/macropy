@@ -32,9 +32,10 @@ class Tests(unittest.TestCase):
         ])
 
     def test_fancy(self):
+        self.maxDiff = None
         trace[[len(x)*3 for x in ['omg', 'wtf', 'b' * 2 + 'q', 'lo' * 3 + 'l']]]
 
-        assert(result[-14:] == [
+        self.assertEqual(result[-14:], [
             "'b' * 2 -> 'bb'",
             "'b' * 2 + 'q' -> 'bbq'",
             "'lo' * 3 -> 'lololo'",
@@ -92,8 +93,8 @@ class Tests(unittest.TestCase):
         from macropy.core import ast_repr
         show_expanded[q[1 + 2]]
 
-        assert ("ast.BinOp(left=ast.Num(n=1), op=ast.Add(), "
-                "right=ast.Num(n=2))" in result[-1])
+        assert ("ast.BinOp(left=ast.Constant(value=1, kind=None), op=ast.Add(), "
+                "right=ast.Constant(value=2, kind=None))" in result[-1])
 
         with show_expanded:
             a = 1

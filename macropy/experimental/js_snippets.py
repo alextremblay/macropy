@@ -27,7 +27,7 @@ macros = macropy.core.macros.Macros()
 @macros.expr
 def js(tree, **kw):
     javascript = pjs.converter.Converter("").convert_node(tree, Scope())
-    return ast.Str(javascript)
+    return ast.Constant(javascript)
 
 
 @macros.expr

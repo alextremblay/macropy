@@ -13,10 +13,11 @@ class Tests(unittest.TestCase):
 
         @macropy.core.walkers.Walker
         def transform(tree, **kw):
-            if type(tree) is ast.Num:
-                return ast.Str(s = str(tree.n))
-            if type(tree) is ast.Str:
-                return ast.Num(n = int(tree.s))
+            if type(tree) is ast.Constant:
+                if type(tree.value) is int:
+                    return ast.Constant(str(tree.value))
+                if type(tree.value) is str:
+                    return ast.Constant(int(tree.value))
             if type(tree) is ast.BinOp and type(tree.op) is ast.Mult:
                 return ast.BinOp(tree.left, ast.Add(), tree.right)
             if type(tree) is ast.BinOp and type(tree.op) is ast.Add:
@@ -30,9 +31,9 @@ class Tests(unittest.TestCase):
         total = [0]
         @macropy.core.walkers.Walker
         def sum(tree, collect, **kw):
-            if type(tree) is ast.Num:
-                total[0] = total[0] + tree.n
-                return collect(tree.n)
+            if type(tree) is ast.Constant:
+                total[0] = total[0] + tree.value
+                return collect(tree.value)
 
         tree, collected = sum.recurse_collect(tree)
         assert total[0] == 36
@@ -46,8 +47,8 @@ class Tests(unittest.TestCase):
 
         @macropy.core.walkers.Walker
         def deepen(tree, ctx, set_ctx, **kw):
-            if type(tree) is ast.Num:
-                tree.n = tree.n + ctx
+            if type(tree) is ast.Constant:
+                tree.value = tree.value + ctx
             else:
                 return set_ctx(ctx=ctx + 1)
 
@@ -61,8 +62,8 @@ class Tests(unittest.TestCase):
 
         @macropy.core.walkers.Walker
         def stopper(tree, stop, **kw):
-            if type(tree) is ast.Num:
-                tree.n = 0
+            if type(tree) is ast.Constant:
+                tree.value = 0
             if type(tree) is ast.BinOp and type(tree.op) is ast.Mult:
                 stop()
 

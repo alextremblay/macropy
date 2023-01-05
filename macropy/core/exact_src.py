@@ -12,12 +12,7 @@ from .util import Lazy, distinct, register
 from .walkers import Walker
 
 
-def linear_index(line_lengths, lineno, col_offset):
-    prev_length = sum(line_lengths[:lineno-1]) + lineno-2
-    out = prev_length + col_offset + 1
-    return out
-
-
+# TODO: unused, but covers cases, which latest `exact_src` probably doesn't. Check, update, or move information to other place and delete.
 @Walker
 def indexer(tree, collect, **kw):
     try:
@@ -36,6 +31,7 @@ def indexer(tree, collect, **kw):
         # raise
 
 
+# FIXME: unused, probably time to delete.
 _transforms = {
     ast.GeneratorExp: "(%s)",
     ast.ListComp: "[%s]",
@@ -47,46 +43,42 @@ _transforms = {
 @register(injected_vars)
 def exact_src(tree, src, **kw):
 
-    def exact_src_imp(tree, src, indexes, line_lengths):
-        # Не совсем понимаю эту часть. Выглядит достаточно просто, однако контекст полностью ускользает.
-        # print(all_child_pos, ast.dump(tree))
-        all_child_pos = sorted(indexer.collect(tree))
-        start_index = linear_index(line_lengths(), *all_child_pos[0])
+    def exact_src_imp(tree, src):
+        
+        # Calculate indexies
+        first_node, last_node = (tree[0], tree[-1]) if isinstance(tree, list) else (tree, tree)
 
-        last_child_index = linear_index(line_lengths(), *all_child_pos[-1])
+        start_line = first_node.lineno-1
+        last_line = last_node.end_lineno
+        start_col = first_node.col_offset
+        end_col = last_node.end_col_offset
 
-        first_successor_index = indexes()[min(indexes().index(last_child_index)+1,
-                                              len(indexes())-1)]
+        chunk_lines = src.split('\n')[start_line:last_line]
+        if len(chunk_lines) > 1: # Multiline
+            # From last line of code get chunk of code before end_col_offset
+            last_str = chunk_lines.pop()[:end_col+1]
+            # And return this line back to code lines array
+            chunk_lines.append(last_str)
+            # formate chunk by offset of first line and constract chunk into a single string
+            prelim = '\n'.join([_line.replace(' ' * start_col, '') for _line in chunk_lines])
 
-        for end_index in range(last_child_index, first_successor_index+1):
+        elif len(chunk_lines) == 1: # Singleline
+            prelim = chunk_lines[0][start_col:end_col]
 
-            prelim = src[start_index:end_index]
-            prelim = _transforms.get(type(tree), "%s") % prelim
+        if isinstance(tree, ast.expr):
+            x = "(" + prelim + ")"
+        else:
+            x = prelim
 
-            if isinstance(tree, ast.stmt):
-                prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
+        try:
+            parsed = ast.parse(x)
+            if unparse(parsed).strip() == unparse(tree).strip():
+                return prelim
+        except SyntaxError as e:
+            pass
+        raise ExactSrcException(prelim)
 
-            if isinstance(tree, list):
-                prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
-
-            try:
-                if isinstance(tree, ast.expr):
-                    x = "(" + prelim + ")"
-                else:
-                    x = prelim
-                parsed = ast.parse(x)
-                if unparse(parsed).strip() == unparse(tree).strip():
-                    return prelim
-
-            except SyntaxError as e:
-                pass
-        raise ExactSrcException()
-
-    positions = Lazy(lambda: indexer.collect(tree))
-    line_lengths = Lazy(lambda: list(map(len, src.split("\n"))))
-    indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c)
-                                for (l, c) in positions()] + [len(src)]))
-    return lambda t: exact_src_imp(t, src, indexes, line_lengths)
+    return lambda t: exact_src_imp(t, src)
 
 
 class ExactSrcException(Exception):

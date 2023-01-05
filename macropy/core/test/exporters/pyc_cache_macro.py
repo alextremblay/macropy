@@ -9,4 +9,4 @@ macros = macropy.core.macros.Macros()
 def f(tree, **kw):
 
     exporters.pyc_cache_macro_count += 1
-    return ast.Num(n = 10)
+    return ast.Constant(value = 10)

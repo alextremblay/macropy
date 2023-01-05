@@ -56,12 +56,8 @@ def ast_repr(x):
     """Similar to repr(), but returns an AST instead of a String, which when
     evaluated will return the given value."""
     tx = type(x)
-    if tx in (int, float):
-        return ast.Num(n=x)
-    elif tx is bytes:
-        return ast.Bytes(s=x)
-    elif isinstance(x, str):
-        return ast.Str(s=x)
+    if tx in (str, int, float, bytes, bool, type(None)):
+        return ast.Constant(x)
     elif tx is list:
         return ast.List(elts=list(map(ast_repr, x)))
     elif tx is dict:
@@ -196,9 +192,9 @@ trec = {
                                 #Expressions Str doesn't properly
                                 #handle from __future__ import
                                 #unicode_literals
-    ast.Str:        lambda tree, i: repr(tree.s),
+    ast.Str:        lambda tree, i: repr(tree.s), # FIXME: DEPRECATED
     ast.Name:       lambda tree, i: str(tree.id),
-    ast.Num:        lambda tree, i: (lambda repr_n:
+    ast.Num:        lambda tree, i: (lambda repr_n: # FIXME: DEPRECATED
                                     ("(" + repr_n.replace("inf", INFSTR) +
                                      ")" if repr_n.startswith("-")
                                     else repr_n.replace("inf", INFSTR)))(repr(tree.n)),
@@ -237,7 +233,7 @@ trec = {
     ast.UnaryOp:    lambda tree, i: ("(" + unop[tree.op.__class__] +
                                      ("(" + rec(tree.operand, i) + ")"
                                       if (type(tree.op) is ast.USub and
-                                          type(tree.operand) is ast.Num)
+                                          type(tree.operand) is ast.Constant) # Errors are possible, doesn't check constant is a number
                                       else " " + rec(tree.operand, i)) +
                                      ")"),
 
@@ -254,8 +250,8 @@ trec = {
                                                 tree.values) +
                                      ")"),
     ast.Attribute:  lambda tree, i: (rec(tree.value, i) +
-                                     (" " if (isinstance(tree.value, ast.Num) and
-                                              isinstance(tree.value.n, int))
+                                     (" " if (isinstance(tree.value, ast.Constant) and
+                                              isinstance(tree.value.value, int))
                                       else "") + "." + tree.attr),
     ast.Subscript:  lambda tree, i: (rec(tree.value, i) + "[" +
                                      rec(tree.slice, i) + "]"),
@@ -308,7 +304,7 @@ trec = {
     ast.With:       lambda tree, i: (tabs(i) + "with " +
                                      jmap(", ", lambda x: rec(x,i), tree.items) +
                                      ":"  + rec(tree.body, i+1)),
-    ast.Bytes:      lambda tree, i: repr(tree.s),
+    ast.Bytes:      lambda tree, i: repr(tree.s), # FIXME: DEPRECATED
     ast.Starred:    lambda tree, i: "*" + rec(tree.value, i),
     ast.arg:        lambda tree, i: (tree.arg + mix(": ", rec(
         getattr(tree,
@@ -397,7 +393,20 @@ if compat.PY36:
 
 if compat.PY38:
     trec.update({
-        ast.Constant: lambda tree, i: str(tree.value)
+        ast.Constant: lambda tree, i: repr(tree.value),
+        # tree: FunctionType(argtypes=[Name(id='int', ctx=Load()), Name(id='int', ctx=Load())], returns=Name(id='int', ctx=Load()))
+        # src: (int, int) -> int
+        # Works only if source parsed with flag ``type_comments=True``
+        # Partial support, see: https://peps.python.org/pep-0484/ and https://peps.python.org/pep-0526/
+        ast.FunctionType: lambda tree, i: (
+            "# type: (" + ", ".join([type_name.id for type_name in tree.argtypes]) + ")"
+            + " -> " + tree.returns.id
+        ),
+        ast.TypeIgnore: lambda tree, i: '',
+        # Walrus operator
+        ast.NamedExpr: lambda tree, i: (
+            "(" + tree.target.id + ' := ' + rec(tree.value, i) + ')'
+        ),
     })
 
 if compat.HAS_FSTRING:
@@ -409,7 +418,7 @@ if compat.HAS_FSTRING:
                                          if tree.format_spec else "") +
                                         "}"),
         ast.JoinedStr: lambda tree, i: "f" + repr("".join(v.s
-            if isinstance(v, ast.Str) else rec(v, i) for v in tree.values))
+            if isinstance(v, ast.Constant) else rec(v, i) for v in tree.values))
     })
 
 

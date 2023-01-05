@@ -262,12 +262,8 @@ class OptionalMatcher(Matcher):
 
 
 def build_matcher(tree, modified):
-    if isinstance(tree, ast.Num):
-        return hq[LiteralMatcher(u[tree.n])]
-    if isinstance(tree, ast.Str):
-        return hq[LiteralMatcher(u[tree.s])]
-    if isinstance(tree, ast.NameConstant):
-        return hq[LiteralMatcher(ast_literal[tree])]
+    if isinstance(tree, ast.Constant):
+        return hq[LiteralMatcher(u[tree.value])]
     if isinstance(tree, ast.Name):
         if tree.id in ['_']:
             return hq[WildcardMatcher()]

@@ -16,5 +16,7 @@ def run_block():
         else:
             import math
             math.acos(0.123)
+        if (a := 2) > 0:
+            print('banana')
 
     return x

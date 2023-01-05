@@ -27,10 +27,10 @@ def literal_eval(node_or_string):
         node_or_string = node_or_string.body
 
     def _convert(node):
-        if isinstance(node, ast.Str):
-            return node.s
-        elif isinstance(node, ast.Num):
-            return node.n
+        # Regular constant: Number, String, None or Bool
+        if isinstance(node, ast.Constant):
+            return node.value
+        # Collections
         elif isinstance(node, ast.Tuple):
             return tuple(map(_convert, node.elts))
         elif isinstance(node, ast.List):
@@ -38,17 +38,15 @@ def literal_eval(node_or_string):
         elif isinstance(node, ast.Dict):
             return dict((_convert(k), _convert(v)) for k, v
                         in zip(node.keys, node.values))
-        elif isinstance(node, ast.Name):
-            if node.id in _safe_names:
-                return _safe_names[node.id]
+        # Complex numbers
         elif (isinstance(node, ast.BinOp) and
               isinstance(node.op, (ast.Add, ast.Sub)) and
-              isinstance(node.right, ast.Num) and
-              isinstance(node.right.n, complex) and
-              isinstance(node.left, ast.Num) and
-              isinstance(node.left.n, (int, float))):  # TODO: long,
-            left = node.left.n
-            right = node.right.n
+              isinstance(node.right, ast.Constant) and
+              isinstance(node.right.value, complex) and
+              isinstance(node.left, ast.Constant) and
+              isinstance(node.left.value, (int, float))):  # TODO: long,
+            left = node.left.value
+            right = node.right.value
             if isinstance(node.op, ast.Add):
                 return left + right
             else:

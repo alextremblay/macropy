@@ -103,7 +103,7 @@ class Tests(unittest.TestCase):
         @case
         class PointKwargs(x, y, {rest}):
             pass
-        assert 0
+
         assert PointKwargs(1, 2).rest == {}
         assert PointKwargs(1, 2, k = 10).rest == {"k": 10}
         assert PointKwargs(1, 2, a=1, b=2).rest == {"a": 1, "b": 2}

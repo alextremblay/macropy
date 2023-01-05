@@ -7,11 +7,11 @@ macros = macropy.core.macros.Macros()
 
 @macros.expr
 def f(tree, exact_src, **kw):
-    return ast.Str(s=exact_src(tree))
+    return ast.Constant(value=exact_src(tree))
 
 @macros.block
 def f(tree, exact_src, target, **kw):
     with q as s:
         x = y
-    s[0].value = ast.Str(s=exact_src(tree))
+    s[0].value = ast.Constant(value=exact_src(tree))
     return s

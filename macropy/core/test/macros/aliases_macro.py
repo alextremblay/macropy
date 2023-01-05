@@ -6,12 +6,12 @@ macros = macropy.core.macros.Macros()
 
 @macros.expr
 def e(tree, exact_src, **kw):
-    return ast.Str("omg")
+    return ast.Constant("omg")
 
 @macros.expr
 def f(tree, exact_src, **kw):
-    return ast.Str("wtf")
+    return ast.Constant("wtf")
 
 @macros.expr
 def g(tree, exact_src, **kw):
-    return ast.Str("bbq")
+    return ast.Constant("bbq")

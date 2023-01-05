@@ -206,10 +206,10 @@ def shared_transform(tree, gen_sym, additional_args=[]):
     )
 
     if vararg:
-        set_varargs.value = ast.Str(vararg)
+        set_varargs.value = ast.Constant(vararg)
 
     if kwarg:
-        set_kwargs.value = ast.Str(kwarg)
+        set_kwargs.value = ast.Constant(kwarg)
 
     nested = [
         n for f in tree.body
@@ -221,8 +221,8 @@ def shared_transform(tree, gen_sym, additional_args=[]):
     additional_members = find_members(tree.body, "self") + nested
 
     prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
-    set_fields.value.elts = list(map(ast.Str, args))
-    set_slots.value.elts = list(map(ast.Str, all_args + additional_members))
+    set_fields.value.elts = list(map(ast.Constant, args))
+    set_slots.value.elts = list(map(ast.Constant, all_args + additional_members))
     new_body, outer, init_body = split_body(tree, gen_sym)
     init_fun.body.extend(init_body)
     tree.body = new_body
@@ -276,7 +276,7 @@ def enum(tree, gen_sym, exact_src, **kw):
             id = expr.func.id
             expr.func = ast.Name(id=tree.name)
 
-            expr.args = [ast.Num(count[0]), ast.Str(id)] + expr.args
+            expr.args = [ast.Constant(count[0]), ast.Constant(id)] + expr.args
             new_assigns.append(ast.Assign([self_ref], expr))
             count[0] += 1
 

@@ -10,7 +10,7 @@ class Cases:
             from . import exact_src
             assert exact_src.run0() == "1 * max(1, 2, 3)"
             assert exact_src.run1() == """1 * max((1,'2',"3"))"""
-            assert exact_src.run_block() == """
+            self.assertEqual(exact_src.run_block(), """
 print("omg")
 print("wtf")
 if 1:
@@ -18,7 +18,9 @@ if 1:
 else:
     import math
     math.acos(0.123)
-            """.strip()
+if (a := 2) > 0:
+    print('banana')
+            """.strip())
 
         def test_gen_sym(self):
             from . import gen_sym
