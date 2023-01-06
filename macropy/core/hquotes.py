@@ -6,6 +6,8 @@ scope rather than their expansion scope.
 import ast
 import pickle
 
+import macropy.core.compat as compat
+
 from .macros import (Macros, check_annotated, filters, injected_vars,
                      macro_stub, post_processing)
 
@@ -132,8 +134,12 @@ def hygienator(tree, stop, scope, **kw):
         id, subtree = res
         if 'unhygienic' == id:
             stop()
-            tree.slice.value.ctx = None
-            return tree.slice.value
+            if compat.PY39:
+                tree.slice.ctx = None
+                return tree.slice
+            else:
+                tree.slice.value.ctx = None
+                return tree.slice.value
 
 
 macros.expose_unhygienic(ast)

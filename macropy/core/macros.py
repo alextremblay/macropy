@@ -106,8 +106,10 @@ class Expr(MacroType):
     brackets, like ``amacro[foo]``."""
 
     def detect_macro(self, in_tree):
-        # FIXME: that type of macro can not be detected
-        AVOID = (ast.ExtSlice)
+        if compat.PY39:
+            AVOID = (ast.ExtSlice)
+        else:
+            AVOID = (ast.ExtSlice)
 
         if (isinstance(in_tree, ast.Subscript) and
             not isinstance(in_tree.slice, AVOID)):  # noqa: E129
@@ -380,10 +382,6 @@ class ExpansionContext:
                 # StopIteration with a possible final ``.value`` member
                 while True:
                     mdata = type_it.send(new_tree)
-                    print("Found macro {}, type {}, line {}".format(
-                        mdata.name, 
-                        mtype.__class__.__name__,
-                        mdata.macro_tree.lineno))
                     found_macro = True
                     mfunc, mmod = mdata.macro
                     # if the macro function is itself a coro, give  it
