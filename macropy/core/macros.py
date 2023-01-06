@@ -106,22 +106,28 @@ class Expr(MacroType):
     brackets, like ``amacro[foo]``."""
 
     def detect_macro(self, in_tree):
+        # FIXME: code is absolute garbage
         if compat.PY39:
-            AVOID = (ast.ExtSlice)
+            if isinstance(in_tree, ast.Subscript) and not isinstance(in_tree.slice, (ast.ExtSlice, ast.Index)):  # noqa: E129
+                body_tree = in_tree.slice
+                name, macro_tree, call_args = self.get_macro_details(in_tree.value)
+                if name is not None and name in self.registry:
+                    new_tree = yield MacroData(self.registry[name], macro_tree,
+                                               body_tree, call_args, {}, name)
+                    assert isinstance(new_tree, ast.expr), ('Wrong type %r' %
+                                                            type(new_tree))
+                    new_tree = ast.Expr(new_tree)
+
         else:
-            AVOID = (ast.ExtSlice)
-
-        if (isinstance(in_tree, ast.Subscript) and
-            not isinstance(in_tree.slice, AVOID)):  # noqa: E129
-            body_tree = in_tree.slice
-            name, macro_tree, call_args = self.get_macro_details(in_tree.value)
-            if name is not None and name in self.registry:
-                new_tree = yield MacroData(self.registry[name], macro_tree,
-                                           body_tree, call_args, {}, name)
-                assert isinstance(new_tree, ast.expr), ('Wrong type %r' %
-                                                        type(new_tree))
-                new_tree = ast.Expr(new_tree)
-
+            if isinstance(in_tree, ast.Subscript) and isinstance(in_tree.slice, ast.Index):
+                body_tree = in_tree.slice.value
+                name, macro_tree, call_args = self.get_macro_details(in_tree.value)
+                if name is not None and name in self.registry:
+                    new_tree = yield MacroData(self.registry[name], macro_tree,
+                                               body_tree, call_args, {}, name)
+                    assert isinstance(new_tree, ast.expr), ('Wrong type %r' %
+                                                            type(new_tree))
+                    new_tree = ast.Expr(new_tree)
 
 class Block(MacroType):
     """Handles block macros, defined by using a ``with`` statement, like:
@@ -629,6 +635,16 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
 
 def check_annotated(tree):
     """Shorthand for checking if an AST is of the form something[...]."""
-    if (isinstance(tree, ast.Subscript) and
-        type(tree.value) is ast.Name):  # noqa: E129
-        return tree.value.id, tree.slice
+
+    # FIXME: Problematic peace of code, instead of ast.Index must be
+    # SOMETHING! Because of this we silently missing some tests
+    if compat.PY39:
+        if (isinstance(tree, ast.Subscript) and
+            type(tree.value) is ast.Name):  # noqa: E129
+            return tree.value.id, tree.slice
+    # 3.8
+    else:
+        if (isinstance(tree, ast.Subscript) 
+            and type(tree.slice) is ast.Index 
+            and type(tree.value) is ast.Name):  # noqa: E129
+            return tree.value.id, tree.slice.value

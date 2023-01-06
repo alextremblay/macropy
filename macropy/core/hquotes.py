@@ -6,7 +6,7 @@ scope rather than their expansion scope.
 import ast
 import pickle
 
-import macropy.core.compat as compat
+from . import compat
 
 from .macros import (Macros, check_annotated, filters, injected_vars,
                      macro_stub, post_processing)
