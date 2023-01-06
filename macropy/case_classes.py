@@ -144,25 +144,25 @@ def find_members(tree, name):
 
 
 def split_body(tree, gen_sym):
-        new_body = []
-        outer = []
-        init_body = []
-        for statement in tree.body:
-            if type(statement) is ast.ClassDef:
-                outer.append(case_transform(statement, gen_sym,
-                                            [ast.Name(id=tree.name)]))
-                with hq as a:
-                    name[tree.name].b = name[statement.name]
-                a_old = a[0]
-                a_old.targets[0].attr = statement.name
+    new_body = []
+    outer = []
+    init_body = []
+    for statement in tree.body:
+        if type(statement) is ast.ClassDef:
+            outer.append(case_transform(statement, gen_sym,
+                                        [ast.Name(id=tree.name)]))
+            with hq as a:
+                name[tree.name].b = name[statement.name]
+            a_old = a[0]
+            a_old.targets[0].attr = statement.name
 
-                a_new = parse_stmt(unparse(a[0]))[0]
-                outer.append(a_new)
-            elif type(statement) is ast.FunctionDef:
-                new_body.append(statement)
-            else:
-                init_body.append(statement)
-        return new_body, outer, init_body
+            a_new = parse_stmt(unparse(a[0]))[0]
+            outer.append(a_new)
+        elif type(statement) is ast.FunctionDef:
+            new_body.append(statement)
+        else:
+            init_body.append(statement)
+    return new_body, outer, init_body
 
 
 def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
