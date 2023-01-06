@@ -8,6 +8,7 @@ PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
 PY36 = sys.version_info >= (3, 6)
 PY38 = sys.version_info >= (3, 8)
+PY39 = sys.version_info >= (3,9)
 
 CPY = sys.implementation.name == 'cpython'
 PYPY = sys.implementation.name == 'pypy'
