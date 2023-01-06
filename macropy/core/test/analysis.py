@@ -24,6 +24,7 @@ def scoped(tree, scope, collect, **kw):
 
 class Tests(unittest.TestCase):
 
+    @unittest.skipIf(not macropy.core.compat.PY39, "On 3.8 arg obj looks like `arg(arg='f', annotation=None, type_comment=None)`. Test argnames: tbd")
     def test_extract_arg_names(self):
         from ast import parse, dump
         expr = parse("lambda a, b, f=6, *c, e=7, **d: 5")
@@ -32,12 +33,12 @@ class Tests(unittest.TestCase):
         convert_dict = lambda d: dict((k,v) if isinstance(v, str)
                                       else (k, dump(v)) for k, v in d.items())
         self.assertDictEqual(convert_dict({
-            'a': "arg(arg='a', annotation=None, type_comment=None)",
-            'b': "arg(arg='b', annotation=None, type_comment=None)",
-            'c': "arg(arg='c', annotation=None, type_comment=None)",
-            'd': "arg(arg='d', annotation=None, type_comment=None)",
-            'e': "arg(arg='e', annotation=None, type_comment=None)",
-            'f': "arg(arg='f', annotation=None, type_comment=None)"
+            'a': "arg(arg='a')",
+            'b': "arg(arg='b')",
+            'c': "arg(arg='c')",
+            'd': "arg(arg='d')",
+            'e': "arg(arg='e')",
+            'f': "arg(arg='f')"
         }), convert_dict(arg_names))
 
     def test_simple_expr(self):
