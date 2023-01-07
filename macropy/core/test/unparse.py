@@ -240,5 +240,82 @@ async def foo():
     result = [(await fun()) for fun in funcs if (await condition())]
 """)
 
+    @unittest.skipIf(not compat.PY310,
+                     "Pattern matching is only for python 3.10")
+    def test_pattern_matching(self):
+        self.maxDiff = None
+        self.assertEqual(
+            convert(
+"""
+match command:
+    case Click(0, 0):
+        print('class mapping 1')
+    case Click(x=0, y=0):
+        print('class mapping 2 with keyword arguments')
+    case Click(1, 2, x=0, y=0):
+        print('class mapping 3, mixed arguments')
+    case 'look':
+        print('str')
+    case look:
+        print('name')
+    case 4:
+        print('number')
+    case ['get', obj]:
+        print('sequence')
+    case (['north'] | ['go', 'north']):
+        print('Or match with sequence')
+    case ['drop', *objects]:
+        print('Match star')
+        for obj in objects:
+            character.drop(obj, current_room)
+    case ['go', _]:
+        print('Sequence with wildcard')
+    case None:
+        print('Match Singleton')
+    case {1: _, 2: _}:
+        print('Match mapping')
+    case {**rest}:
+        print('Match mapping 2')
+    case _:
+        print('Wildcard')
+    case [*_]:
+        print('Unnamed wild sequence')
+"""
+            ),
+"""
+match command:
+    case Click(0, 0):
+        print('class mapping 1')
+    case Click(x=0, y=0):
+        print('class mapping 2 with keyword arguments')
+    case Click(1, 2, x=0, y=0):
+        print('class mapping 3, mixed arguments')
+    case 'look':
+        print('str')
+    case look:
+        print('name')
+    case 4:
+        print('number')
+    case ['get', obj]:
+        print('sequence')
+    case (['north'] | ['go', 'north']):
+        print('Or match with sequence')
+    case ['drop', *objects]:
+        print('Match star')
+        for obj in objects:
+            character.drop(obj, current_room)
+    case ['go', _]:
+        print('Sequence with wildcard')
+    case None:
+        print('Match Singleton')
+    case {1: _, 2: _}:
+        print('Match mapping')
+    case {**rest}:
+        print('Match mapping 2')
+    case _:
+        print('Wildcard')
+    case [*_]:
+        print('Unnamed wild sequence')""")
+
     def test_leftovers(self):
         self.assertEqual(macropy.core._ast_leftovers(), set())

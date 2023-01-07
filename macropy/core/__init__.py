@@ -409,6 +409,60 @@ if compat.PY38:
         ),
     })
 
+if compat.PY310:
+    # ast.If:         lambda tree, i: (tabs(i) + "if " + rec(tree.test, i) + ":" +
+    #                                  rec(tree.body, i+1) + else_rec(tree.orelse, i)),
+
+    # Pattern matching
+    trec.update(
+        {
+            ast.Match: lambda tree, i: (
+                tabs(i) + "match " + rec(tree.subject, i) + ":"
+                + rec(tree.cases, i+1)),
+
+            ast.match_case: lambda tree, i: (
+                tabs(i) + "case " + rec(tree.pattern, i) + ":"
+                + rec(tree.body, i+1)),
+
+            ast.MatchValue: lambda tree, i: (
+                rec(tree.value, i)
+            ),
+            ast.MatchSingleton: lambda tree, i: (
+                repr(tree.value)
+            ),
+            ast.MatchSequence: lambda tree, i: (
+                "[" + jmap(", ", lambda x: rec(x, i), tree.patterns) + "]"
+            ),
+            ast.MatchStar: lambda tree, i: (
+                "*" + (tree.name if tree.name else "_")
+            ),
+            ast.MatchMapping: lambda tree, i: (
+                "{" + ", ".join(
+                    rec(key, i) + ": " + rec(value, i) 
+                    for key, value in zip(tree.keys, tree.patterns))
+                + ("**" + tree.rest if tree.rest else "")
+                + "}"
+            ),
+            ast.MatchClass: lambda tree, i:  (
+                tree.cls.id + "("
+                + jmap(", ", lambda x: rec(x, i), tree.patterns)
+                + (", " if tree.patterns and tree.kwd_patterns else "")
+                + jmap(", ", 
+                       lambda pair: (
+                           (lambda k, v: rec(k, i) + "=" + rec(v, i))(*pair)),
+                       zip(tree.kwd_attrs, tree.kwd_patterns))
+                + ")"
+            ),
+            ast.MatchAs: lambda tree, i: (
+                rec(tree.pattern, i) + " as " + tree.name
+                if tree.pattern else (tree.name or "_")
+            ),
+            ast.MatchOr: lambda tree, i: (
+                "(" + jmap(" | ", lambda x: rec(x, i), tree.patterns) + ")"
+            )
+        }
+    )
+
 if compat.HAS_FSTRING:
     trec.update({
         ast.FormattedValue: lambda tree, i: ("{" +  rec(tree.value, i) +
