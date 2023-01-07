@@ -625,10 +625,16 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
                 if name.name not in mod.macros.decorator.registry
             ]
 
-            stmt.names.extend([
-                ast.alias(x, x) for x in
-                mod.macros.expose_unhygienic.registry.keys()
-            ])
+            if compat.PY310:
+                stmt.names.extend([
+                    ast.alias(x, x, lineno=1, col_offset=0) for x in
+                    mod.macros.expose_unhygienic.registry.keys()
+                ])
+            else:
+                stmt.names.extend([
+                    ast.alias(x, x) for x in
+                    mod.macros.expose_unhygienic.registry.keys()
+                ])
 
     return bindings
 
