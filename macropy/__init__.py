@@ -26,5 +26,5 @@ def console():
 
 from .core import exporters  # noqa
 
-__version__ = "1.1.0b2"
+__version__ = "2.0"
 exporter = exporters.NullExporter()
