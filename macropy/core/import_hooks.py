@@ -94,7 +94,7 @@ class MacroFinder(object):
         if not source_code or "macros" not in source_code:
             return None, None
 
-        logger.info('Expand macros in %s', filename)
+        logger.debug('Expand macros in %s', filename)
 
         tree = ast.parse(source_code)
         bindings = macropy.core.macros.detect_macros(tree, spec.name,

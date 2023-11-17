@@ -597,7 +597,7 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
     the list of macro modules."""
     bindings = []
 
-    logger.info("Finding macros in %r", from_fullname)
+    logger.debug("Finding macros in %r", from_fullname)
     for stmt in tree.body:
         # if the name is something like "from foo.bar import macros"
         if (isinstance(stmt, ast.ImportFrom) and
@@ -609,7 +609,7 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
             if fullname == __name__:
                 continue
 
-            logger.info("Importing macros from %r into %r", fullname,
+            logger.debug("Importing macros from %r into %r", fullname,
                         from_module)
             mod = importlib.import_module(fullname)
 
